@@ -1,3 +1,5 @@
+# Code from https://github.com/pcerda/string_categorical_encoders
+
 import os
 import sys
 import numpy as np
@@ -16,17 +18,44 @@ from sklearn.decomposition import PCA, LatentDirichletAllocation, NMF, \
 from sklearn.pipeline import Pipeline
 from sklearn.utils import murmurhash3_32, check_random_state
 
-from fastText import load_model
+#from fasttext import load_model
 import category_encoders as cat_enc
 from dirty_cat import SimilarityEncoder, TargetEncoder
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
 
-import gamma_poisson_factorization
+from source import gamma_poisson_factorization
 
-CE_HOME = os.environ.get('CE_HOME')
-sys.path.append(os.path.abspath(os.path.join(
-    CE_HOME, 'python', 'categorical_encoding')))
-from get_data import get_data_path
+import numpy as np
+
+from lightgbm import LGBMClassifier, LGBMRegressor
+from xgboost import XGBClassifier, XGBRegressor
+
+from sklearn import linear_model
+from sklearn import preprocessing
+from sklearn import ensemble
+from sklearn import metrics
+from sklearn.model_selection import StratifiedShuffleSplit, ShuffleSplit
+from sklearn.model_selection import GridSearchCV
+from sklearn.kernel_approximation import Nystroem
+from sklearn.compose import ColumnTransformer
+from sklearn.exceptions import ConvergenceWarning
+from sklearn.neural_network import MLPRegressor, MLPClassifier
+#from sklearn_extra.kernel_methods import EigenProRegressor, EigenProClassifier
+
+from joblib import Parallel, delayed
+
+#from get_data import Data, get_data_path
+#from constants import sample_seed, shuffle_seed, clf_seed
+
+
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings('ignore', category=ConvergenceWarning)
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+
+# CE_HOME = os.environ.get('CE_HOME')
+# sys.path.append(os.path.abspath(os.path.join(
+#     CE_HOME, 'python', 'categorical_encoding')))
+# from get_data import get_data_path
 
 
 class OneHotEncoderRemoveOne(OneHotEncoder):
@@ -78,7 +107,7 @@ class NgramNaiveFisherKernel(SimilarityEncoder):
         -------
         self
         """
-        X = self._check_X(X)
+        X = self._check_X(X)[0][0].reshape(-1, 1)
         if self.handle_unknown not in ['error', 'ignore']:
             template = ("handle_unknown should be either 'error' or "
                         "'ignore', got %s")
@@ -135,7 +164,7 @@ class NgramNaiveFisherKernel(SimilarityEncoder):
         X_new : 2-d array, shape [n_samples, n_features_new]
             Transformed input.
         """
-        X = self._check_X(X)
+        X = self._check_X(X)[0][0].reshape(-1, 1)
 
         n_samples, n_features = X.shape
 
@@ -248,8 +277,7 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
             raise AttributeError(
                 'language %s has not been downloaded yet' % self.language)
 
-        self.ft_model = load_model(os.path.join(get_data_path(), 'fastText',
-                                                path_dict[self.language]))
+        self.ft_model = load_model(os.path.join('Add model path'))
         return self
 
     def transform(self, X):
@@ -620,11 +648,11 @@ class ColumnEncoder(BaseEstimator, TransformerMixin):
                  encoder_name,
                  reduction_method=None,
                  ngram_range=(2, 4),
-                 categories='auto',
+                 categories='auto', #auto label binarizer categories
                  dtype=np.float64,
                  handle_unknown='ignore',
-                 clf_type=None,
-                 n_components=None):
+                 clf_type=None,  # Requied for some methods
+                 n_components=None): # Dimensionality reduction, LDA etc. componentss
         self.ngram_range = ngram_range
         self.encoder_name = encoder_name
         self.categories = categories
@@ -657,13 +685,14 @@ class ColumnEncoder(BaseEstimator, TransformerMixin):
             'TargetEncoder': TargetEncoder(
                 clf_type=self.clf_type, handle_unknown='ignore'),
             'MDVEncoder': MDVEncoder(self.clf_type),
+            'OrdinalEncoder': cat_enc.OrdinalEncoder(),
             'BackwardDifferenceEncoder': cat_enc.BackwardDifferenceEncoder(),
             'BinaryEncoder': cat_enc.BinaryEncoder(),
             'HashingEncoder': cat_enc.HashingEncoder(),
             'HelmertEncoder': cat_enc.HelmertEncoder(),
             'SumEncoder': cat_enc.SumEncoder(),
             'PolynomialEncoder': cat_enc.PolynomialEncoder(),
-            'BaseNEncoder': cat_enc.BaseNEncoder(),
+            'BaseNEncoder': cat_enc.BaseNEncoder(base=10),
             'LeaveOneOutEncoder': cat_enc.LeaveOneOutEncoder(),
             'NgramsLDA': Pipeline([
                 ('ngrams_count',
@@ -695,7 +724,7 @@ class ColumnEncoder(BaseEstimator, TransformerMixin):
             'OnlineGammaPoissonFactorization':
                 gamma_poisson_factorization.OnlineGammaPoissonFactorization(
                     n_topics=self.n_components, rho=.99, r=None,
-                    tol=1e-4, random_state=18, init='k-means++',
+                    tol=1e-4, random_state=18, init='k-means',
                     ngram_range=self.ngram_range,
                     rescale_W=True, max_iter_e_step=10),
             'OnlineGammaPoissonFactorization2':
@@ -792,6 +821,7 @@ class ColumnEncoder(BaseEstimator, TransformerMixin):
         assert X.values.ndim == 1
         self.columns = X.name
         X = X.values
+        
 
         if self.encoder_name not in self.encoders_dict:
             template = ("Encoder %s has not been implemented yet")
@@ -899,6 +929,7 @@ class ColumnEncoder(BaseEstimator, TransformerMixin):
                 ])
         # for MostFrequentCategories, change the fit method to consider only
         # the selected categories
+        #print(X.shape)
         self.pipeline.fit(X, y)
         return self
 

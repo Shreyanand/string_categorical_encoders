@@ -1,142 +1,126 @@
-import os
-import sys
+from get_data import dataloader
+from column_encoder import ColumnEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.metrics import classification_report
+import numpy as np
+from lightgbm import LGBMClassifier
+import get_data
+#from xgboost import XGBClassifier, XGBRegressor
 
-CE_HOME = os.environ.get('CE_HOME')
-sys.path.append(os.path.abspath(os.path.join(
-    CE_HOME, 'python', 'categorical_encoding')))
-from fit_predict_categorical_encoding import fit_predict_categorical_encoding
-from leave_rare_cats_out import LeaveRareCatsOut
-from get_data import get_data_path
+kc_train = dataloader('data/kaggle_cat_train.csv', "kaggle_cat")
+kc_train.get_input_target()
+kc_test = dataloader('data/kaggle_cat_train.csv', "kaggle_cat")
+kc_test.get_input_target()
 
-'''
-Learning with dirty categorical variables.
-'''
+encoders = ['OneHotEncoder',
+            'SimilarityEncoder',
+            #'NgramNaiveFisherKernel',
+            #'BackwardDifferenceEncoder',
+            # 'BinaryEncoder',
+            # 'HashingEncoder',
+            # 'HelmertEncoder',
+            # 'SumEncoder',
+            # 'PolynomialEncoder',
+            # 'BaseNEncoder',
+            # 'NgramsCountVectorizer',
+            # 'NgramsTfIdfVectorizer',
+            # 'WordNMF',
+            # 'WordNgramsTfIdfVectorizer',
+    
+]
 
-# Parameters ##################################################################
-datasets = [
-    'vancouver_employee',
-    'journal_influence',
-    'colleges',
-    'midwest_survey',
-    'employee_salaries',
-    'medical_charge',
-    'kickstarter_projects',
-    'crime_data',
-    'open_payments',
-    'traffic_violations',
-    'federal_election',
-    'public_procurement',
-    'building_permits',
-    'road_safety',
-    'met_objects',
-    'drug_directory',
-    'wine_reviews',
+not_working =  [ 
+            #'ngrams_hot_vectorizer',
+            #'NgramsLDA',
+            # 'NgramsMultinomialMixture',
+            
+            #takes too long
+            # 'NMF' 
+            # 'AdHocNgramsMultinomialMixture',
+            #'AdHocIndependentPDF',
+    
+            # These have some kmeans initialization errors cuz of matrix dims
+            #'OnlineGammaPoissonFactorization',
+            # 'OnlineGammaPoissonFactorization2',
+            # 'OnlineGammaPoissonFactorization3',
+            # 'OnlineGammaPoissonFactorization4',
+            # 'WordOnlineGammaPoissonFactorization',
+            # 'OnlineGammaPoissonFactorization_fast',
+            
+            # Other errors
+            # 'MDVEncoder',
+            # 'MinHashEncoder',
+    
+            # 'PretrainedFastText',
+            # 'PretrainedFastText_hu',
     ]
-n_jobs = 20
-n_splits = 20
-test_size = 1./3
-str_preprocess = True
-n_components = 100
-results_path = os.path.join(get_data_path(), 'results', 'jmlr2019_2')
-# results_path = os.path.join(get_data_folder(), 'results',
-#                             'kdd_2019_only_cats')
-classifiers = [
-    # 'NystroemRidgeCV',
-    # 'L2RegularizedLinearModel',
-    # 'EigenProGaussian160',
-    # 'EigenProPolynomial',
-    # 'XGB',
-    # 'LGBM',
-    # 'KNN',
-    'MLPGridSearchCV',
-    ]
-###############################################################################
 
-# Probabilistic topic models without dimensionality reduction #################
-encoders = [
-    ## 'MinHashEncoder',
-    ## 'OnlineGammaPoissonFactorization3',
-    # 'WordOnlineGammaPoissonFactorization',
-    # 'NMF',
-    # 'WordNMF',
-    # 'TargetEncoder'
+supervised = [
+    #'TargetEncoder', 'LeaveOneOutEncoder',
     ]
-reduction_methods = [None]
-fit_predict_categorical_encoding(datasets=datasets,
-                                 str_preprocess=str_preprocess,
-                                 encoders=encoders, classifiers=classifiers,
-                                 reduction_methods=reduction_methods,
-                                 n_components=n_components,
-                                 test_size=test_size, n_splits=n_splits,
-                                 n_jobs=n_jobs, results_path=results_path,
-                                 model_path='')
 
-# Encoders with TruncatedSVD ##################################################
-encoders = [
-    'PretrainedFastText',
-    # 'PretrainedFastText_hu',
-    # 'PretrainedFastText_fr',
-    'OneHotEncoder',
-    'NgramsCountVectorizer',
-    'NgramsTfIdfVectorizer',
-    # 'WordNgramsTfIdfVectorizer',
-    ]
-reduction_methods = ['TruncatedSVD']
-fit_predict_categorical_encoding(datasets=datasets,
-                                 str_preprocess=str_preprocess,
-                                 encoders=encoders, classifiers=classifiers,
-                                 reduction_methods=reduction_methods,
-                                 n_components=n_components,
-                                 test_size=test_size, n_splits=n_splits,
-                                 n_jobs=n_jobs, results_path=results_path,
-                                 model_path='')
 
-# Encoders with most frequent protoypes #######################################
-encoders = [
-    # 'SimilarityEncoder',
-    # 'NgramNaiveFisherKernel',
-    ]
-reduction_methods = ['most_frequent']
-# '-', 'GaussianRandomProjection', 'most_frequent', 'k-means', 'TruncatedSVD'
-fit_predict_categorical_encoding(datasets=datasets,
-                                 str_preprocess=str_preprocess,
-                                 encoders=encoders, classifiers=classifiers,
-                                 reduction_methods=reduction_methods,
-                                 n_components=n_components,
-                                 test_size=test_size, n_splits=n_splits,
-                                 n_jobs=n_jobs, results_path=results_path,
-                                 model_path='')
 
-# Encoders with k-means protoypes #############################################
-encoders = [
-    ## 'SimilarityEncoder',
-    ]
-reduction_methods = ['k-means']
-fit_predict_categorical_encoding(datasets=datasets,
-                                 str_preprocess=str_preprocess,
-                                 encoders=encoders, classifiers=classifiers,
-                                 reduction_methods=reduction_methods,
-                                 n_components=n_components,
-                                 test_size=test_size, n_splits=n_splits,
-                                 n_jobs=n_jobs, results_path=results_path,
-                                 model_path='')
+def experiments(enc):
+    kc_train.col_encoders = {col:  ColumnEncoder(enc) 
+        for col in kc_train.X.columns}
+    
+    nominal = ['nom_'+str(i) for i in range(0,10)]
+    
+    kc_train_sample_X = kc_train.X.iloc[:300][nominal]
+    #kc_train_sample_y = kc_train.y.iloc[:300]
+    kc_test_sample_X = kc_test.X.iloc[:50][nominal]
+    #kc_test_sample_y = kc_test.y.iloc[:50]
+    
+    cT = ColumnTransformer([(col, kc_train.col_encoders[col], col) for col in kc_train_sample_X])
+    return cT.fit_transform(kc_train_sample_X)
+    #x_out = cT.fit_transform(kc_train_sample_X)
+    
+    # x_test_out = cT.transform(kc_test_sample_X)
+    
+    # lgbm = LGBMClassifier()
+    # lgbm.fit(x_out, kc_train_sample_y)
+    
+    # print(classification_report(y_pred = lgbm.predict(x_test_out), y_true = kc_test_sample_y))
+    
+from joblib import Parallel, delayed
+import multiprocessing
 
-# Encoders with GaussianRandomProjection ######################################
-encoders = [
-    # 'SimilarityEncoder',
-    ## 'PretrainedFastText',
-    # 'PretrainedFastText_hu',
-    # 'PretrainedFastText_fr',
-    ## 'OneHotEncoder',
-    ## 'NgramsCountVectorizer',
-    ## 'NgramsTfIdfVectorizer',
-    ]
-reduction_methods = ['GaussianRandomProjection']
-fit_predict_categorical_encoding(datasets=datasets,
-                                 str_preprocess=str_preprocess,
-                                 encoders=encoders, classifiers=classifiers,
-                                 reduction_methods=reduction_methods,
-                                 n_components=n_components,
-                                 test_size=test_size, n_splits=n_splits,
-                                 n_jobs=n_jobs, results_path=results_path,
-                                 model_path='')
+# inputs = range(10) 
+# def processInput(i):
+#     return i * i
+
+num_cores = multiprocessing.cpu_count()
+
+results = Parallel(backend="multiprocessing", n_jobs=num_cores)(delayed(experiments)(enc) for enc in encoders)
+print(results)
+
+
+# for enc in encoders:
+#     print(enc)
+#     kc_train.col_encoders = {col:  ColumnEncoder(enc) 
+#         for col in kc_train.X.columns}
+    
+#     nominal = ['nom_'+str(i) for i in range(0,10)]
+    
+#     kc_train_sample_X = kc_train.X.iloc[:300][nominal]
+#     kc_train_sample_y = kc_train.y.iloc[:300]
+#     kc_test_sample_X = kc_test.X.iloc[:50][nominal]
+#     kc_test_sample_y = kc_test.y.iloc[:50]
+    
+#     cT = ColumnTransformer([(col, kc_train.col_encoders[col], col) for col in kc_train_sample_X])
+#     cT.fit(kc_train_sample_X)
+#     #x_out = cT.fit_transform(kc_train_sample_X)
+    
+#     # x_test_out = cT.transform(kc_test_sample_X)
+    
+#     # lgbm = LGBMClassifier()
+#     # lgbm.fit(x_out, kc_train_sample_y)
+    
+#     # print(classification_report(y_pred = lgbm.predict(x_test_out), y_true = kc_test_sample_y))
+
+
+
+
+
+            

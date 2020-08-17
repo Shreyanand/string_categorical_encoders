@@ -22,7 +22,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.neural_network import MLPRegressor, MLPClassifier
-from sklearn_extra.fast_kernel import FKR_EigenPro, FKC_EigenPro
+from sklearn_extra.kernel_methods import EigenProRegressor, EigenProClassifier
 
 from joblib import Parallel, delayed
 
@@ -177,7 +177,7 @@ def instanciate_estimators(clf_type, classifiers, clf_seed,
                     param_grid=param_grid_MLP, cv=3,
                     scoring=metrics.make_scorer(score_metric)),
             'EigenProPolynomial':
-                FKC_EigenPro(
+                EigenProClassifier(
                     batch_size="auto", n_epoch=10,
                     n_components=n_components_eigenpro,
                     subsample_size="auto", kernel="polynomial",
@@ -185,7 +185,7 @@ def instanciate_estimators(clf_type, classifiers, clf_seed,
                     kernel_params=None, random_state=None),
             'EigenProGaussian160':
                 GridSearchCV(
-                    estimator=FKC_EigenPro(
+                    estimator=EigenProClassifier(
                         batch_size="auto", n_epoch=10,
                         n_components=n_components_eigenpro,
                         subsample_size="auto", kernel="gaussian",
@@ -195,7 +195,7 @@ def instanciate_estimators(clf_type, classifiers, clf_seed,
                     scoring=metrics.make_scorer(score_metric)),
             'EigenProGaussian1000':
                 GridSearchCV(
-                    estimator=FKC_EigenPro(
+                    estimator=EigenProClassifier(
                         batch_size="auto", n_epoch=10,
                         n_components=1000,
                         subsample_size="auto", kernel="gaussian",
@@ -269,7 +269,7 @@ def instanciate_estimators(clf_type, classifiers, clf_seed,
                     param_grid=param_grid_MLP, cv=3,
                     scoring=metrics.make_scorer(score_metric)),
             'EigenProPolynomial':
-                FKC_EigenPro(
+                EigenProClassifier(
                     batch_size="auto", n_epoch=10,
                     n_components=n_components_eigenpro,
                     subsample_size="auto", kernel="polynomial",
@@ -277,7 +277,7 @@ def instanciate_estimators(clf_type, classifiers, clf_seed,
                     kernel_params=None, random_state=None),
             'EigenProGaussian160':
                 GridSearchCV(
-                    estimator=FKC_EigenPro(
+                    estimator=EigenProClassifier(
                         batch_size="auto", n_epoch=10,
                         n_components=n_components_eigenpro,
                         subsample_size="auto", kernel="gaussian",
@@ -287,7 +287,7 @@ def instanciate_estimators(clf_type, classifiers, clf_seed,
                     scoring=metrics.make_scorer(score_metric)),
             'EigenProGaussian1000':
                 GridSearchCV(
-                    estimator=FKC_EigenPro(
+                    estimator=EigenProClassifier(
                         batch_size="auto", n_epoch=10,
                         n_components=1000,
                         subsample_size="auto", kernel="gaussian",
@@ -356,7 +356,7 @@ def instanciate_estimators(clf_type, classifiers, clf_seed,
                     param_grid=param_grid_MLP, cv=3,
                     scoring=metrics.make_scorer(score_metric)),
             'EigenProPolynomial':
-                FKR_EigenPro(
+                EigenProRegressor(
                     batch_size="auto", n_epoch=10,
                     n_components=n_components_eigenpro,
                     subsample_size="auto", kernel="polynomial",
@@ -364,7 +364,7 @@ def instanciate_estimators(clf_type, classifiers, clf_seed,
                     kernel_params=None, random_state=None),
             'EigenProGaussian160':
                 GridSearchCV(
-                    estimator=FKR_EigenPro(
+                    estimator=EigenProRegressor(
                         batch_size="auto", n_epoch=10,
                         n_components=n_components_eigenpro,
                         subsample_size="auto", kernel="gaussian",
@@ -374,7 +374,7 @@ def instanciate_estimators(clf_type, classifiers, clf_seed,
                     scoring=metrics.make_scorer(score_metric)),
             'EigenProGaussian1000':
                 GridSearchCV(
-                    estimator=FKR_EigenPro(
+                    estimator=EigenProRegressor(
                         batch_size="auto", n_epoch=10,
                         n_components=1000,
                         subsample_size="auto", kernel="gaussian",
