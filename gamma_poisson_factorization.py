@@ -148,7 +148,7 @@ class OnlineGammaPoissonFactorization(BaseEstimator, TransformerMixin):
         return H_out
 
     def _init_w(self, V, X):
-        print(row_norms(V, squared=True).reshape(-1,1), self.n_topics)
+        #print(row_norms(V, squared=True).reshape(-1,1), self.n_topics)
         if self.init == 'k-means++':
             W = _k_init(
                 V, self.n_topics, row_norms(V, squared=True).reshape(-1,1),
