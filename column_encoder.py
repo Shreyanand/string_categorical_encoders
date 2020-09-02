@@ -18,7 +18,7 @@ from sklearn.decomposition import PCA, LatentDirichletAllocation, NMF, \
 from sklearn.pipeline import Pipeline
 from sklearn.utils import murmurhash3_32, check_random_state
 
-#from fasttext import load_model
+from fasttext import load_model
 import category_encoders as cat_enc
 from dirty_cat import SimilarityEncoder, TargetEncoder
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
@@ -277,7 +277,7 @@ class PretrainedFastText(BaseEstimator, TransformerMixin):
             raise AttributeError(
                 'language %s has not been downloaded yet' % self.language)
 
-        self.ft_model = load_model(os.path.join('Add model path'))
+        self.ft_model = load_model('../public_data/cc.en.300.bin')
         return self
 
     def transform(self, X):
