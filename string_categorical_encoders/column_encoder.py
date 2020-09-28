@@ -23,8 +23,7 @@ import category_encoders as cat_enc
 from dirty_cat import SimilarityEncoder, TargetEncoder
 from dirty_cat.similarity_encoder import get_kmeans_prototypes
 
-from source import gamma_poisson_factorization
-
+from string_categorical_encoders import gamma_poisson_factorization
 import numpy as np
 
 from lightgbm import LGBMClassifier, LGBMRegressor
@@ -40,13 +39,7 @@ from sklearn.kernel_approximation import Nystroem
 from sklearn.compose import ColumnTransformer
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.neural_network import MLPRegressor, MLPClassifier
-#from sklearn_extra.kernel_methods import EigenProRegressor, EigenProClassifier
-
 from joblib import Parallel, delayed
-
-#from get_data import Data, get_data_path
-#from constants import sample_seed, shuffle_seed, clf_seed
-
 
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings('ignore', category=ConvergenceWarning)
